@@ -14,10 +14,10 @@ void println(uint8_t message[]);
 void print(uint8_t* message);
 void print_char(uint8_t character);
 void initHttpd();
-LOCAL void ICACHE_FLASH_ATTR handleIncomingConnection(void* arg);
-void http_receive(void* arg);
-void http_reconnect(void*, sint8 err);
-void http_disconnect(void* arg);
+LOCAL ICACHE_FLASH_ATTR void handleIncomingConnection(void* arg);
+LOCAL ICACHE_FLASH_ATTR void httpdReceive(void* arg);
+LOCAL ICACHE_FLASH_ATTR void httpdReconnect(void*, sint8 err);
+LOCAL ICACHE_FLASH_ATTR void httpdDisconnect(void* arg);
 
 void ICACHE_FLASH_ATTR user_init() {
     disableDebugMessages();
@@ -100,5 +100,12 @@ void initHttpd() {
     println("[httpd] listening");
 }
 
-LOCAL void ICACHE_FLASH_ATTR handleIncomingConnection(void* arg) {
-} 
+LOCAL ICACHE_FLASH_ATTR void handleIncomingConnection(void* arg) {
+//    struct espconn* connection = arg;
+//    espconn_regist_recvcb(connection, )
+}
+//LOCAL ICACHE_FLASH_ATTR void httpdReceive(void* arg);
+//LOCAL ICACHE_FLASH_ATTR void httpdReconnect(void*, sint8 err);
+//LOCAL ICACHE_FLASH_ATTR void httpdDisconnect(void* arg);
+
+

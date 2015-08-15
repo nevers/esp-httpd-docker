@@ -24,7 +24,7 @@ void ICACHE_FLASH_ATTR user_init() {
     uart_div_modify(0, UART_CLK_FREQ/115200); // Set the UART baud rate
     print("\033[2J"); // Clear the screen
     println("\n\r--- begin ---");
-    println("Initialising wifi");
+    println("[wifi] init");
     char ssid[32] = SSID;
     char pwd[64] = PWD;
     struct station_config config;
@@ -35,7 +35,6 @@ void ICACHE_FLASH_ATTR user_init() {
     os_memcpy(&config.ssid, ssid, 32);
     os_memcpy(&config.password, pwd, 64);
 
-    println("Setting wifi configuration");
     wifi_station_set_config(&config);
     wifi_set_event_handler_cb(wifi_callback);
 
@@ -70,41 +69,35 @@ void print_char(uint8_t character) {
 }
 
 void wifi_callback(System_Event_t *evt) {
-    println("Got wifi callback");
     switch(evt->event) {
         case EVENT_STAMODE_CONNECTED:
-            println("Connected");
+            println("[wifi] connected");
             break;
 
          case EVENT_STAMODE_DISCONNECTED:
-            println("Disconnected");
+            println("[wifi] disconnected");
             break;
 
          case EVENT_STAMODE_GOT_IP:
-            ;
-            char ip[90];
-            os_sprintf(ip, "Got ip: " IPSTR, IP2STR(&evt->event_info.got_ip.ip));
+            print("[wifi] got ip: ");
+            char ip[16];
+            os_sprintf(ip, IPSTR, IP2STR(&evt->event_info.got_ip.ip));
             println(ip);
             break;
     }
 }
 
 void initHttpd() {
-    println("Initialising httpd");
+    println("[httpd] init");
     LOCAL struct espconn connection;
-    println(".");
     LOCAL esp_tcp protocol;
-    println(".");
     connection.type = ESPCONN_TCP;
-    println(".");
     connection.state = ESPCONN_NONE;
-    println(".");
     connection.proto.tcp = &protocol;
-    println(".");
     connection.proto.tcp->local_port= 80;
     espconn_regist_connectcb(&connection, handleIncomingConnection);
     espconn_accept(&connection);
-    println("Listening ");
+    println("[httpd] listening");
 }
 
 LOCAL void ICACHE_FLASH_ATTR handleIncomingConnection(void* arg) {

@@ -2,7 +2,7 @@
 # are privided: SDK_BASE, XTENSA_TOOLS
 
 # Name for the resulting binary
-TARGET = blinky
+TARGET = sensor
 
 BUILD_BASE = build
 FW_BASE = $(BUILD_BASE)/bin

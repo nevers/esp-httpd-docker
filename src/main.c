@@ -14,6 +14,7 @@ void print_char(uint8_t character);
 void ICACHE_FLASH_ATTR user_init() {
     disableDebugMessages();
     uart_div_modify(0, UART_CLK_FREQ/115200); // Set the UART baud rate
+    print("\033[2J"); // Clear the screen
     println("\n\r***");
     println("Initialising wifi");
     char ssid[32] = SSID;
@@ -62,7 +63,7 @@ void print_char(uint8_t character) {
 }
 
 void wifi_callback(System_Event_t *event) {
-    os_printf("Got wifi callback");
+    println("Got wifi callback");
     switch(event->event) {
         case EVENT_STAMODE_CONNECTED:
             println("Connected!");
@@ -74,9 +75,9 @@ void wifi_callback(System_Event_t *event) {
 
          case EVENT_STAMODE_GOT_IP:
             println("Got ip!");
-            char ip[20];
-            os_sprintf(ip, "%d", IP2STR(&event->event_info.got_ip.ip));
-            println(ip);
+            //char ip[20];
+            //os_sprintf(ip, "%d", IP2STR(&event->event_info.got_ip.ip));
+            //println(ip);
             break;
     }
 }

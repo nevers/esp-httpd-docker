@@ -10,6 +10,9 @@ void wifi_callback(System_Event_t *event);
 void println(uint8_t* message);
 void print(uint8_t* message);
 void print_char(uint8_t character);
+void http_receive(void* arg);
+void http_reconnect(void*, sint8 err);
+void http_disconnect(void* arg);
 
 void ICACHE_FLASH_ATTR user_init() {
     disableDebugMessages();
@@ -62,9 +65,9 @@ void print_char(uint8_t character) {
     WRITE_PERI_REG(UART_FIFO(0) , character);
 }
 
-void wifi_callback(System_Event_t *event) {
+void wifi_callback(System_Event_t *evt) {
     println("Got wifi callback");
-    switch(event->event) {
+    switch(evt->event) {
         case EVENT_STAMODE_CONNECTED:
             println("Connected!");
             break;
@@ -74,10 +77,10 @@ void wifi_callback(System_Event_t *event) {
             break;
 
          case EVENT_STAMODE_GOT_IP:
-            println("Got ip!");
-            //char ip[20];
-            //os_sprintf(ip, "%d", IP2STR(&event->event_info.got_ip.ip));
-            //println(ip);
+            ;
+            char ip[90];
+            os_sprintf(ip, "Got ip: " IPSTR, IP2STR(&evt->event_info.got_ip.ip));
+            println(ip);
             break;
     }
 }

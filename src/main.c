@@ -13,11 +13,24 @@ void wifi_callback(System_Event_t *event);
 void println(uint8_t message[]);
 void print(uint8_t* message);
 void print_char(uint8_t character);
+void print_int(int number);
 void initHttpd();
+void printRemoteIp(struct espconn* connection);
 LOCAL ICACHE_FLASH_ATTR void handleIncomingConnection(void* arg);
-LOCAL ICACHE_FLASH_ATTR void httpdReceive(void* arg);
+LOCAL ICACHE_FLASH_ATTR void httpdReceive(void* arg, char* data, unsigned short length);
 LOCAL ICACHE_FLASH_ATTR void httpdReconnect(void*, sint8 err);
 LOCAL ICACHE_FLASH_ATTR void httpdDisconnect(void* arg);
+
+typedef enum HttpRequestType {
+    GET, PORT
+} RequestType;
+
+typedef struct HttpRequest {
+    enum HttpRequestType type;
+    char* host;
+} HttpRequest;
+
+HttpRequest* parseHttpRequest(char* data);
 
 void ICACHE_FLASH_ATTR user_init() {
     disableDebugMessages();
@@ -59,6 +72,12 @@ void print(uint8_t* message) {
         print_char(message[i]);
 }
 
+void print_int(int number) {
+    char numberString[8];
+    os_sprintf(numberString, "%d", number);
+    print(numberString);
+}
+
 void print_char(uint8_t character) {
     while (true) {
         uint32_t fifo_cnt = READ_PERI_REG(UART_STATUS(0)) & (UART_TXFIFO_CNT << UART_TXFIFO_CNT_S);
@@ -88,7 +107,7 @@ void wifi_callback(System_Event_t *evt) {
 }
 
 void initHttpd() {
-    println("[httpd] init");
+    println("[http] init");
     LOCAL struct espconn connection;
     LOCAL esp_tcp protocol;
     connection.type = ESPCONN_TCP;
@@ -97,15 +116,54 @@ void initHttpd() {
     connection.proto.tcp->local_port= 80;
     espconn_regist_connectcb(&connection, handleIncomingConnection);
     espconn_accept(&connection);
-    println("[httpd] listening");
+    println("[http] listening for GET requests");
 }
 
 LOCAL ICACHE_FLASH_ATTR void handleIncomingConnection(void* arg) {
-//    struct espconn* connection = arg;
-//    espconn_regist_recvcb(connection, )
+    struct espconn* connection = arg;
+    espconn_regist_reconcb(connection, httpdReconnect);
+    espconn_regist_disconcb(connection, httpdDisconnect);
+    espconn_regist_recvcb(connection, httpdReceive);
 }
-//LOCAL ICACHE_FLASH_ATTR void httpdReceive(void* arg);
-//LOCAL ICACHE_FLASH_ATTR void httpdReconnect(void*, sint8 err);
-//LOCAL ICACHE_FLASH_ATTR void httpdDisconnect(void* arg);
+
+LOCAL ICACHE_FLASH_ATTR void httpdReconnect(void* arg, sint8 err) {
+    struct espconn* connection = arg;
+    print("[http] ");
+    printRemoteIp(connection);
+    println(" reconnect");
+}
 
 
+LOCAL ICACHE_FLASH_ATTR void httpdDisconnect(void* arg) {
+    struct espconn* connection = arg;
+    print("[http] ");
+    printRemoteIp(connection);
+    println(" disconnectied");
+}
+
+void printRemoteIp(struct espconn* connection) {
+    print_int(connection->proto.tcp->remote_ip[0]);
+    print(".");
+    print_int(connection->proto.tcp->remote_ip[1]);
+    print(".");
+    print_int(connection->proto.tcp->remote_ip[2]);
+    print(".");
+    print_int(connection->proto.tcp->remote_ip[3]);
+}
+
+LOCAL ICACHE_FLASH_ATTR void httpdReceive(void* arg, char* data, unsigned short length) {
+    println("[http] content:");
+    println(data);
+    HttpRequest* request = NULL; 
+    if(!(request = parseHttpRequest(data))) {
+        println("[http] dropping non-GET request");
+        return;        
+    }
+
+}
+
+HttpRequest* parseHttpRequest(char* data) {
+    //char* occurrence = (char*) os_strstr(data, "GET");
+    //return occurrence != NULL;
+    return NULL;
+}

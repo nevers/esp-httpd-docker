@@ -20,20 +20,23 @@ LOCAL ICACHE_FLASH_ATTR void httpdReceive(void* arg, char* data, unsigned short 
 LOCAL ICACHE_FLASH_ATTR void httpdReconnect(void*, sint8 err);
 LOCAL ICACHE_FLASH_ATTR void httpdDisconnect(void* arg);
 
+#define HTTP_URL_LENGTH_MAX 1024
+#define HTTP_HOST_LENGTH_MAX 16
+
 typedef enum HttpMethod {
     GET, POST, PUT, DELETE, HEAD, TRACE, CONNECT, UNKNOWN
 } HttpMethod;
 
 typedef struct HttpRequest {
     enum HttpMethod method;
-    char* url;
-    char* host;
+    char url[HTTP_URL_LENGTH_MAX];
+    char host[HTTP_HOST_LENGTH_MAX];
 } HttpRequest;
 
 HttpRequest* parseHttpRequest(const char* data);
 char* findLast(const char* string, const char* pattern);
-char* substring(char* string, char* endChar);
 HttpMethod getHttpMethod(const char* data);
+void substring(char* string, char* endChar, char* result);
 
 void ICACHE_FLASH_ATTR user_init() {
     disableDebugMessages();
@@ -166,8 +169,6 @@ LOCAL ICACHE_FLASH_ATTR void httpdReceive(void* arg, char* data, unsigned short 
     print_int(request->method);
     println("");
 
-    os_free(request->url);
-    os_free(request->host); 
     os_free(request);
 }
 
@@ -179,9 +180,14 @@ HttpRequest* parseHttpRequest(const char* data) {
 
     HttpRequest* request = (HttpRequest*) os_zalloc(sizeof(HttpRequest));
     request->method = method;
-    request->url = substring(urlBegin, " ");
-    request->host = substring(hostBegin, "\n");
+    substring(urlBegin, " ", request->url);
+    substring(hostBegin, "\n", request->host);
     return request;
+}
+
+char* findLast(const char* string, const char* pattern) {
+    char* first = (char*) os_strstr(string, pattern);
+    return (first == NULL) ? NULL : first + strlen(pattern);
 }
 
 HttpMethod getHttpMethod(const char* data) {
@@ -203,16 +209,9 @@ HttpMethod getHttpMethod(const char* data) {
     return method;
 }
 
-char* findLast(const char* string, const char* pattern) {
-    char* first = (char*) os_strstr(string, pattern);
-    return (first == NULL) ? NULL : first + strlen(pattern);
-}
-
-char* substring(char* string, char* endChar) {
+void substring(char* string, char* endChar, char* result) {
    char* end = (char*) os_strstr(string, endChar); 
-   int length = end - string;
-   char* sub = (char*) os_zalloc(sizeof(char) * length);
-   os_memcpy(sub, string, length);
-   sub[length] = '\0';
-   return sub;
+   int length = end - string; //FIXME length should not exceed the size of url (1024)
+   os_memcpy(result, string, length);
+   result[length] = '\0';
 }

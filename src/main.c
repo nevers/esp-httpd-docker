@@ -37,6 +37,7 @@ bool parseHttpRequest(const char* data, HttpRequest* request);
 char* findLast(const char* string, const char* pattern);
 HttpMethod getHttpMethod(const char* data);
 void substring(char* string, char* endChar, char* result);
+void send_bad_request(struct espconn* connection);
 
 void ICACHE_FLASH_ATTR user_init() {
     disableDebugMessages();
@@ -157,17 +158,33 @@ void printRemoteIp(struct espconn* connection) {
     print_int(connection->proto.tcp->remote_ip[3]);
 }
 
-LOCAL ICACHE_FLASH_ATTR void httpdReceive(void* arg, char* data, unsigned short length) {
+void send_ok(struct espconn* connection, const char* data) {
+    int total_length = 0;
+    char header[256]; //FIXME this this should be a constant and we need a check for not exceeding it.
+    os_memset(header, 0, 256); 
+    char* response = NULL;
+
+    os_sprintf(header, "HTTP/1.0 200 OK\r\nContent-Length: %d\r\nServer: lwIP/1.4.0\r\n", os_strlen(data));
+    os_sprintf(header + os_strlen(header), "Content-type: text/plain\r\nExpires: Fri, 10 Apr 2008 14:00:00 GMT\r\nPragma: no-cache\r\n\r\n");
+    total_length = os_strlen(header) + os_strlen(data);
+    response = (char *) os_zalloc(total_length);
+    os_memcpy(response, header, os_strlen(header));
+    os_memcpy(response + os_strlen(header), data, os_strlen(data));
+    espconn_sent(connection, response, total_length);
+    os_free(response);
+}
+
+LOCAL ICACHE_FLASH_ATTR void httpdReceive(void* connection, char* data, unsigned short length) {
     HttpRequest request; 
     if(!parseHttpRequest(data, &request)) {
-        println("[http] dropping invalid request");
+        println("[http] error parsing request");
+        send_bad_request(connection);
         return;        
     }
 
-    println(request.url);
+    print("[http] accepted request from: ");
     println(request.host);
-    print_int(request.method);
-    println("");
+    send_ok(connection, "Hello world!\n");
 }
 
 bool parseHttpRequest(const char* data, HttpRequest* request) {
@@ -211,4 +228,13 @@ void substring(char* string, char* endChar, char* result) {
    int length = end - string; //FIXME length should not exceed the size of url (1024)
    os_memcpy(result, string, length);
    result[length] = '\0';
+}
+
+void send_bad_request(struct espconn* connection) {
+    char data[256];
+    os_memset(data, 0, 256);
+    uint16 length = 0;
+    os_sprintf(data, "HTTP/1.0 400 BadRequest\r\nContent-Length: 0\r\nServer: esp-sensor\r\n\n");
+    length = os_strlen(data);
+    espconn_sent(connection, data, length);
 }

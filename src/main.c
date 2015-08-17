@@ -33,7 +33,7 @@ typedef struct HttpRequest {
     char host[HTTP_HOST_LENGTH_MAX];
 } HttpRequest;
 
-HttpRequest* parseHttpRequest(const char* data);
+bool parseHttpRequest(const char* data, HttpRequest* request);
 char* findLast(const char* string, const char* pattern);
 HttpMethod getHttpMethod(const char* data);
 void substring(char* string, char* endChar, char* result);
@@ -158,31 +158,28 @@ void printRemoteIp(struct espconn* connection) {
 }
 
 LOCAL ICACHE_FLASH_ATTR void httpdReceive(void* arg, char* data, unsigned short length) {
-    HttpRequest* request = NULL; 
-    if(!(request = parseHttpRequest(data))) {
+    HttpRequest request; 
+    if(!parseHttpRequest(data, &request)) {
         println("[http] dropping invalid request");
         return;        
     }
 
-    println(request->url);
-    println(request->host);
-    print_int(request->method);
+    println(request.url);
+    println(request.host);
+    print_int(request.method);
     println("");
-
-    os_free(request);
 }
 
-HttpRequest* parseHttpRequest(const char* data) {
+bool parseHttpRequest(const char* data, HttpRequest* request) {
     char* urlBegin = (char*) findLast(data, " ");
     char* hostBegin = (char*) findLast(data, "Host: ");
     HttpMethod method = getHttpMethod(data);
-    if(urlBegin == NULL || hostBegin == NULL || method == UNKNOWN) return NULL;
+    if(urlBegin == NULL || hostBegin == NULL || method == UNKNOWN) return false;
 
-    HttpRequest* request = (HttpRequest*) os_zalloc(sizeof(HttpRequest));
     request->method = method;
     substring(urlBegin, " ", request->url);
     substring(hostBegin, "\n", request->host);
-    return request;
+    return true;
 }
 
 char* findLast(const char* string, const char* pattern) {

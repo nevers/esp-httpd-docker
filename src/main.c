@@ -30,9 +30,10 @@ typedef struct HttpRequest {
     char* host;
 } HttpRequest;
 
-HttpRequest* parseHttpRequest(char* data);
+HttpRequest* parseHttpRequest(const char* data);
 char* findLast(const char* string, const char* pattern);
 char* substring(char* string, char* endChar);
+HttpMethod getHttpMethod(const char* data);
 
 void ICACHE_FLASH_ATTR user_init() {
     disableDebugMessages();
@@ -170,28 +171,7 @@ LOCAL ICACHE_FLASH_ATTR void httpdReceive(void* arg, char* data, unsigned short 
     os_free(request);
 }
 
-HttpMethod getHttpMethod(char* data) {
-    char* typeString = substring(data, " ");
-    HttpMethod method = UNKNOWN;
-    if(os_strcmp(typeString, "GET") == 0)
-        method = GET;
-    else if(os_strcmp(typeString, "POST") == 0)
-        method = POST;
-    else if(os_strcmp(typeString, "PUT") == 0)
-        method = PUT;
-    else if(os_strcmp(typeString, "DELETE") == 0)
-       method = DELETE;
-    else if(os_strcmp(typeString, "HEAD") == 0)
-        method = HEAD;
-    else if(os_strcmp(typeString, "TRACE") == 0)
-        method = TRACE;
-    else if(os_strcmp(typeString, "CONNECT") == 0)
-        method = CONNECT;
-    os_free(typeString);
-    return method;
-}
-
-HttpRequest* parseHttpRequest(char* data) {
+HttpRequest* parseHttpRequest(const char* data) {
     char* urlBegin = (char*) findLast(data, " ");
     char* hostBegin = (char*) findLast(data, "Host: ");
     HttpMethod method = getHttpMethod(data);
@@ -202,6 +182,25 @@ HttpRequest* parseHttpRequest(char* data) {
     request->url = substring(urlBegin, " ");
     request->host = substring(hostBegin, "\n");
     return request;
+}
+
+HttpMethod getHttpMethod(const char* data) {
+    HttpMethod method = UNKNOWN;
+    if(os_strncmp(data, "GET ", 4) == 0)
+        method = GET;
+    else if(os_strncmp(data, "POST ", 5) == 0)
+        method = POST;
+    else if(os_strncmp(data, "PUT ", 4) == 0)
+        method = PUT;
+    else if(os_strncmp(data, "DELETE ", 7) == 0)
+       method = DELETE;
+    else if(os_strncmp(data, "HEAD ", 5) == 0)
+        method = HEAD;
+    else if(os_strncmp(data, "TRACE ", 6) == 0)
+        method = TRACE;
+    else if(os_strncmp(data, "CONNECT ", 8) == 0)
+        method = CONNECT;
+    return method;
 }
 
 char* findLast(const char* string, const char* pattern) {

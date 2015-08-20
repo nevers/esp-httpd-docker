@@ -184,7 +184,13 @@ LOCAL ICACHE_FLASH_ATTR void httpdReceive(void* connection, char* data, unsigned
 
     print("[http] accepted request from: ");
     println(request.host);
-    send_ok(connection, "Hello world!\n");
+
+
+    uint8_t buffer[16];
+    uint16 value = system_adc_read();
+    os_sprintf(buffer, "[adcr] %d\n", value);
+    send_ok(connection, buffer);
+    println("[http] response sent");
 }
 
 bool parseHttpRequest(const char* data, HttpRequest* request) {

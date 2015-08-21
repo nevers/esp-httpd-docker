@@ -3,15 +3,11 @@
 #include "user_config.h"
 #include "osapi.h"
 
-void disableDebugMessages();
-void nop(char);
 void wifi_callback(System_Event_t *event);
-
+void handle_adc(HttpRequest* request, struct espconn* connection);
 
 void ICACHE_FLASH_ATTR user_init() {
-    disableDebugMessages();
-    uart_div_modify(0, UART_CLK_FREQ/115200); // Set the UART baud rate
-    print("\033[2J"); // Clear the screen
+    log_init();
     println("\n\r--- begin ---");
     println("[wifi] init");
     char ssid[32] = SSID;
@@ -27,14 +23,15 @@ void ICACHE_FLASH_ATTR user_init() {
     wifi_station_set_config(&config);
     wifi_set_event_handler_cb(wifi_callback);
 
-    initHttpd();
+    http_init();
+    http_add_request_handler(&handle_adc);
 }
 
-void disableDebugMessages() {
-    os_install_putc1(nop);    
-}
-
-void nop(char c) {
+void handle_adc(HttpRequest* request, struct espconn* connection) {
+    uint8_t buffer[16];
+    uint16 value = system_adc_read();
+    os_sprintf(buffer, "[adcr] %d\n", value);
+    http_send(connection, buffer);
 }
 
 void wifi_callback(System_Event_t *evt) {
@@ -55,7 +52,3 @@ void wifi_callback(System_Event_t *evt) {
             break;
     }
 }
-
-
-
-

@@ -11,10 +11,12 @@ bool parseHttpRequest(const char* data, HttpRequest* request);
 char* findLast(const char* string, const char* pattern);
 HttpMethod getHttpMethod(const char* data);
 void substring(char* string, char* endChar, char* result);
-void send_ok(struct espconn* connection, const char* data);
-void send_bad_request(struct espconn* connection);
 
-void initHttpd() {
+int handlers_size = 0;
+int handlers_max_size = HTTP_DEFAULT_REQUEST_HANDLERS;
+http_request_handler** handlers = NULL;
+
+void http_init() {
     println("[http] init");
     static struct espconn connection;
     static esp_tcp protocol;
@@ -25,6 +27,17 @@ void initHttpd() {
     espconn_regist_connectcb(&connection, handleIncomingConnection);
     espconn_accept(&connection);
     println("[http] listening for GET requests");
+
+    handlers = (http_request_handler**) os_zalloc(sizeof(http_request_handler*) * handlers_max_size);
+}
+
+void httpd_stop() {
+    os_free(handlers);
+}
+
+void http_add_request_handler(http_request_handler* handler) {
+    handlers[handlers_size] = handler;
+    handlers_size++;
 }
 
 static ICACHE_FLASH_ATTR void handleIncomingConnection(void* arg) {
@@ -58,23 +71,21 @@ void printRemoteIp(struct espconn* connection) {
     print_int(connection->proto.tcp->remote_ip[3]);
 }
 
+
 static ICACHE_FLASH_ATTR void httpdReceive(void* connection, char* data, unsigned short length) {
     HttpRequest request; 
     if(!parseHttpRequest(data, &request)) {
         println("[http] error parsing request");
-        send_bad_request(connection);
+        http_send_bad_request(connection);
         return;        
     }
 
     print("[http] accepted request from: ");
     println(request.host);
-
-
-    uint8_t buffer[16];
-    uint16 value = system_adc_read();
-    os_sprintf(buffer, "[adcr] %d\n", value);
-    send_ok(connection, buffer);
-    println("[http] response sent");
+    
+    int i; 
+    for(i = 0; i < handlers_size; i++) 
+        (*handlers[i])(&request, connection);
 }
 
 bool parseHttpRequest(const char* data, HttpRequest* request) {
@@ -120,7 +131,7 @@ void substring(char* string, char* endChar, char* result) {
    result[length] = '\0';
 }
 
-void send_ok(struct espconn* connection, const char* data) {
+void http_send(struct espconn* connection, const char* data) {
     int total_length = 0;
     char header[256]; //FIXME this this should be a constant and we need a check for not exceeding it.
     os_memset(header, 0, 256); 
@@ -136,7 +147,7 @@ void send_ok(struct espconn* connection, const char* data) {
     os_free(response);
 }
 
-void send_bad_request(struct espconn* connection) {
+void http_send_bad_request(struct espconn* connection) {
     char data[256];
     os_memset(data, 0, 256);
     uint16 length = 0;

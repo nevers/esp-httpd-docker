@@ -1,5 +1,5 @@
-#include "logger.h"
-#include "httpd.h"
+#include "log.h"
+#include "http.h"
 #include "user_config.h"
 #include "osapi.h"
 
@@ -8,7 +8,6 @@ void handle_adc(HttpRequest* request, struct espconn* connection);
 
 void ICACHE_FLASH_ATTR user_init() {
     log_init();
-    println("\n\r--- begin ---");
     println("[wifi] init");
     char ssid[32] = SSID;
     char pwd[64] = PWD;

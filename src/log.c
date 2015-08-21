@@ -1,4 +1,4 @@
-#include "logger.h"
+#include "log.h"
 #include "user_interface.h"
 #include "uart_register.h"
 #include "osapi.h"
@@ -10,7 +10,7 @@ void nop(char);
 void log_init() {
     disableDebugMessages();
     uart_div_modify(0, UART_CLK_FREQ/115200); // Set the UART baud rate
-    print("\033[2J"); // Clear the screen
+    print("\033[2J\r\n"); // Clear the screen
 }
 
 void disableDebugMessages() {

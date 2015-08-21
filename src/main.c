@@ -16,7 +16,6 @@ void ICACHE_FLASH_ATTR user_init() {
 void handle_adc(HttpRequest* request, struct espconn* connection) {
     uint8_t buffer[16];
     uint16 value = system_adc_read();
-    os_sprintf(buffer, "[adcr] %d\n", value);
+    os_sprintf(buffer, "[adc] %d\n", value);
     http_send(connection, buffer);
 }
-

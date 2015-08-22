@@ -7,9 +7,9 @@ ICACHE_FLASH_ATTR static void httpdReceive(void* arg, char* data, unsigned short
 ICACHE_FLASH_ATTR static void httpdReconnect(void*, sint8 err);
 ICACHE_FLASH_ATTR static void httpdDisconnect(void* arg);
 void log_remote_ip(struct espconn* connection);
-bool parseHttpRequest(const char* data, HttpRequest* request);
-char* findLast(const char* string, const char* pattern);
-HttpMethod getHttpMethod(const char* data);
+bool parse_http_request(const char* data, HttpRequest* request);
+char* find_last(const char* string, const char* pattern);
+HttpMethod get_http_method(const char* data);
 void substring(char* string, char* endChar, char* result);
 
 int handlers_size = 0;
@@ -69,7 +69,7 @@ void log_remote_ip(struct espconn* connection) {
 
 static ICACHE_FLASH_ATTR void httpdReceive(void* connection, char* data, unsigned short length) {
     HttpRequest request; 
-    if(!parseHttpRequest(data, &request)) {
+    if(!parse_http_request(data, &request)) {
         logln_error("[http] error parsing request");
         http_send_bad_request(connection);
         return;        
@@ -83,10 +83,10 @@ static ICACHE_FLASH_ATTR void httpdReceive(void* connection, char* data, unsigne
         (*handlers[i])(&request, connection);
 }
 
-bool parseHttpRequest(const char* data, HttpRequest* request) {
-    char* urlBegin = (char*) findLast(data, " ");
-    char* hostBegin = (char*) findLast(data, "Host: ");
-    HttpMethod method = getHttpMethod(data);
+bool parse_http_request(const char* data, HttpRequest* request) {
+    char* urlBegin = (char*) find_last(data, " ");
+    char* hostBegin = (char*) find_last(data, "Host: ");
+    HttpMethod method = get_http_method(data);
     if(urlBegin == NULL || hostBegin == NULL || method == UNKNOWN) return false;
 
     request->method = method;
@@ -95,12 +95,12 @@ bool parseHttpRequest(const char* data, HttpRequest* request) {
     return true;
 }
 
-char* findLast(const char* string, const char* pattern) {
+char* find_last(const char* string, const char* pattern) {
     char* first = (char*) os_strstr(string, pattern);
     return (first == NULL) ? NULL : first + strlen(pattern);
 }
 
-HttpMethod getHttpMethod(const char* data) {
+HttpMethod get_http_method(const char* data) {
     HttpMethod method = UNKNOWN;
     if(os_strncmp(data, "GET ", 4) == 0)
         method = GET;

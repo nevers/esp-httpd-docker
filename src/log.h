@@ -3,10 +3,20 @@
 
 #include "c_types.h"
 
-void log_init();
-void print(uint8_t* message);
-void print_char(uint8_t character);
-void print_int(int number);
-void println(uint8_t message[]);
+typedef enum LogLevel {
+    DEBUG, INFO, WARNING, ERROR
+} LogLevel; 
+
+void log_init(LogLevel level);
+
+void logln_debug(const uint8_t message[]); 
+void logln_info(const uint8_t message[]);
+void logln_warning(const uint8_t message[]);
+void logln_error(const uint8_t message[]);
+
+void log_debug(const uint8_t message[]); 
+void log_info(const uint8_t message[]);
+void log_warning(const uint8_t message[]);
+void log_error(const uint8_t message[]);
 
 #endif

@@ -7,7 +7,7 @@
 void handle_adc(HttpRequest* request, struct espconn* connection);
 
 void ICACHE_FLASH_ATTR user_init() {
-    log_init();
+    log_init(INFO);
     wifi_init();
     http_init();
     http_add_request_handler(&handle_adc);

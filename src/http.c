@@ -6,7 +6,7 @@ ICACHE_FLASH_ATTR static void handleIncomingConnection(void* arg);
 ICACHE_FLASH_ATTR static void httpdReceive(void* arg, char* data, unsigned short length);
 ICACHE_FLASH_ATTR static void httpdReconnect(void*, sint8 err);
 ICACHE_FLASH_ATTR static void httpdDisconnect(void* arg);
-void printRemoteIp(struct espconn* connection);
+void log_remote_ip(struct espconn* connection);
 bool parseHttpRequest(const char* data, HttpRequest* request);
 char* findLast(const char* string, const char* pattern);
 HttpMethod getHttpMethod(const char* data);
@@ -17,7 +17,7 @@ int handlers_max_size = HTTP_DEFAULT_REQUEST_HANDLERS;
 http_request_handler** handlers = NULL;
 
 void http_init() {
-    println("[http] init");
+    logln_info("[http] init");
     static struct espconn connection;
     static esp_tcp protocol;
     connection.type = ESPCONN_TCP;
@@ -26,7 +26,7 @@ void http_init() {
     connection.proto.tcp->local_port= 80;
     espconn_regist_connectcb(&connection, handleIncomingConnection);
     espconn_accept(&connection);
-    println("[http] listening for GET requests");
+    logln_info("[http] listening for GET requests");
 
     handlers = (http_request_handler**) os_zalloc(sizeof(http_request_handler*) * handlers_max_size);
 }
@@ -49,39 +49,34 @@ static ICACHE_FLASH_ATTR void handleIncomingConnection(void* arg) {
 
 static ICACHE_FLASH_ATTR void httpdReconnect(void* arg, sint8 err) {
     struct espconn* connection = arg;
-    print("[http] ");
-    printRemoteIp(connection);
-    println(" reconnect");
+    log_warning("[http] ");
+    log_remote_ip(connection);
+    logln_warning(" reconnect");
 }
 
 static ICACHE_FLASH_ATTR void httpdDisconnect(void* arg) {
     struct espconn* connection = arg;
-    print("[http] ");
-    printRemoteIp(connection);
-    println(" disconnected");
+    log_info("[http] ");
+    log_remote_ip(connection);
+    logln_info(" disconnected");
 }
 
-void printRemoteIp(struct espconn* connection) {
-    print_int(connection->proto.tcp->remote_ip[0]);
-    print(".");
-    print_int(connection->proto.tcp->remote_ip[1]);
-    print(".");
-    print_int(connection->proto.tcp->remote_ip[2]);
-    print(".");
-    print_int(connection->proto.tcp->remote_ip[3]);
+void log_remote_ip(struct espconn* connection) {
+    char ip[16];
+    os_sprintf(ip, IPSTR, IP2STR(connection->proto.tcp->remote_ip));
+    log_info(ip);
 }
-
 
 static ICACHE_FLASH_ATTR void httpdReceive(void* connection, char* data, unsigned short length) {
     HttpRequest request; 
     if(!parseHttpRequest(data, &request)) {
-        println("[http] error parsing request");
+        logln_error("[http] error parsing request");
         http_send_bad_request(connection);
         return;        
     }
 
-    print("[http] accepted request from: ");
-    println(request.host);
+    log_info("[http] accepted request from: ");
+    logln_info(request.host);
     
     int i; 
     for(i = 0; i < handlers_size; i++) 

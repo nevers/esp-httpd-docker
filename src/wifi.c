@@ -6,7 +6,7 @@
 void wifi_callback(System_Event_t *event);
 
 void wifi_init() {
-    println("[wifi] init");
+    logln_info("[wifi] init");
     char ssid[32] = WIFI_SSID;
     char pwd[64] = WIFI_PWD;
     struct station_config config;
@@ -24,18 +24,18 @@ void wifi_init() {
 void wifi_callback(System_Event_t *evt) {
     switch(evt->event) {
         case EVENT_STAMODE_CONNECTED:
-            println("[wifi] connected");
+            logln_info("[wifi] connected");
             break;
 
          case EVENT_STAMODE_DISCONNECTED:
-            println("[wifi] disconnected");
+            logln_info("[wifi] disconnected");
             break;
 
          case EVENT_STAMODE_GOT_IP:
-            print("[wifi] got ip: ");
+            log_info("[wifi] got ip: ");
             char ip[16];
             os_sprintf(ip, IPSTR, IP2STR(&evt->event_info.got_ip.ip));
-            println(ip);
+            logln_info(ip);
             break;
     }
 }

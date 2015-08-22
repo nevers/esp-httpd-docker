@@ -7,8 +7,8 @@ void wifi_callback(System_Event_t *event);
 
 void wifi_init() {
     logln_info("[wifi] init");
-    char ssid[32] = WIFI_SSID;
-    char pwd[64] = WIFI_PWD;
+    char ssid[] = WIFI_SSID;
+    char pwd[] = WIFI_PWD;
     struct station_config config;
 
     wifi_set_opmode(STATION_MODE);

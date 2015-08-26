@@ -6,16 +6,16 @@
 void wifi_callback(System_Event_t *event);
 
 void wifi_init() {
+    static struct station_config config;
+
     logln_info("[wifi] init");
-    char ssid[] = WIFI_SSID;
-    char pwd[] = WIFI_PWD;
-    struct station_config config;
 
-    wifi_set_opmode(STATION_MODE);
     wifi_station_set_hostname(WIFI_HOST);
+    wifi_set_opmode(STATION_MODE);
 
-    os_memcpy(&config.ssid, ssid, 32);
-    os_memcpy(&config.password, pwd, 64);
+    config.bssid_set = 0;
+    os_memcpy(&config.ssid, WIFI_SSID, 32);
+    os_memcpy(&config.password, WIFI_PWD, 64);
 
     wifi_station_set_config(&config);
     wifi_set_event_handler_cb(wifi_callback);

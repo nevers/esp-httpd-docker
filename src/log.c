@@ -13,7 +13,7 @@ LogLevel log_level;
 
 void log_init(LogLevel level) {
     log_level = level;
-    disable_debug_messages();
+//    disable_debug_messages();
     uart_div_modify(0, UART_CLK_FREQ/115200); // Set the UART baud rate
     log_error("\033[2J\r\n"); // Clear the screen
 }

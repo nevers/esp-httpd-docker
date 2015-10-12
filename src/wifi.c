@@ -10,15 +10,16 @@ void wifi_init() {
 
     logln_info("[wifi] init");
 
+    wifi_set_event_handler_cb(wifi_callback);
+    wifi_station_set_auto_connect(0);
     wifi_station_set_hostname(WIFI_HOST);
-    wifi_set_opmode(STATION_MODE);
+    wifi_set_opmode_current(STATION_MODE);
 
     config.bssid_set = 0;
     os_memcpy(&config.ssid, WIFI_SSID, 32);
     os_memcpy(&config.password, WIFI_PWD, 64);
 
-    wifi_station_set_config(&config);
-    wifi_set_event_handler_cb(wifi_callback);
+    wifi_station_set_config_current(&config);
 }
 
 void wifi_callback(System_Event_t *evt) {

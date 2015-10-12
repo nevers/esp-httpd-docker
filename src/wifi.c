@@ -20,6 +20,7 @@ void wifi_init() {
     os_memcpy(&config.password, WIFI_PWD, 64);
 
     wifi_station_set_config_current(&config);
+    wifi_station_connect();
 }
 
 void wifi_callback(System_Event_t *evt) {

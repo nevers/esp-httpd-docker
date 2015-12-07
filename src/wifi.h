@@ -3,7 +3,7 @@
 
 #define WIFI_SSID "your_ssid"
 #define WIFI_PWD "your_pwd"
-#define WIFI_HOST "sensor"
+#define WIFI_HOST "esp8266"
 
 void wifi_init();
 

@@ -7,6 +7,14 @@ A simple http server for the ESP8266
 * Provide your wifi details in wifi.h
 * Run docker-build to build the development environment image.
 * Run docker-flash to make the binaries and flash them to your ESP8266 SoC. 
+* After flashing, it will automagically connect to the device and show its output. Grab the ip address from the console and browse to it. By default it will read out the ADC and print its value. Example console output:
+'''
+[wifi] init
+[http] init
+[http] listening for GET requests
+[wifi] connected
+[wifi] got ip: 192.168.1.5
+'''
 
 ## Hardware setup
 For the ESP-12 board, refer to [esp-open-sdk-docker](https://github.com/nevers/esp-open-sdk-docker)

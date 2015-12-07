@@ -17,4 +17,4 @@ A simple http server for the ESP8266
 ```
 
 ## Hardware setup
-For the ESP-12 board, refer to [esp-open-sdk-docker](https://github.com/nevers/esp-open-sdk-docker)
+For the flashing ESP-12 board, refer to [esp-open-sdk-docker](https://github.com/nevers/esp-open-sdk-docker)
